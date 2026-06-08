@@ -39,59 +39,60 @@ vactl --help
 
 ---
 
-## 3. 설정 (모든 OS 공통 — 권장)
+## 3. 설정 — 환경(env)은 내장, 마스터키만 넣으면 됨
 
-서버 주소·APP_ID·마스터키를 한 줄로 저장합니다. **OS·셸과 무관하게 동일**합니다:
+서버 URL과 APP_ID는 **환경마다 CLI에 내장**돼 있습니다. 사용자는 **마스터키만** 넣으면 됩니다.
 
+| 환경 | server | appId |
+|---|---|---|
+| `prod` (기본) | `https://34-50-38-51.nip.io` | `valueadd-prod` |
+| `local` | `http://localhost:8000` (+Parse :1337) | `valueadd-poc` |
+
+### 프로덕션 (기본)
 ```bash
-vactl config set --server https://<서버> --app-id <APP_ID> --master-key <MASTER_KEY>
-vactl ping
+vactl login          # 마스터키만 물어봄
+vactl ping           # "워커 OK / Parse OK" 면 성공
+```
+(비대화형: `vactl config set --master-key <MASTER_KEY>`)
+
+### 로컬
+```bash
+vactl login --env local
+vactl --env local ping
 ```
 
-대화형으로 입력하려면:
-
+### 환경 보기 · 전환
 ```bash
-vactl login
+vactl env                    # 환경 목록 + 활성 환경 + 키 설정 여부
+vactl env use local          # 기본 환경을 local 로 (전역)
+vactl --env prod company list # 특정 명령만 다른 환경으로
 ```
 
-`vactl ping` 이 "워커 OK / Parse OK" 면 성공입니다.
+### 프로젝트마다 환경 고정 (`.vactl.json`)
+프로젝트 폴더에서 한 번:
+```bash
+vactl env use local --project   # 이 폴더에 .vactl.json {"env":"local"} 생성
+```
+이후 그 폴더(및 하위)에서 `vactl ...` 은 자동으로 `local` 을 씁니다. CLI는 현재 위치에서 위로 올라가며 `.vactl.json` 을 찾습니다.
 
-> 설정은 홈 폴더의 `config.json` 에 저장되며, 가능한 OS에서는 본인만 읽도록 권한이 제한됩니다.
+> 마스터키는 **항상 전역**(`~/.vactl/config.json`, 환경별 보관)에만 저장됩니다. `.vactl.json` 에는 환경 이름만 들어가서 **git에 커밋해도 안전**합니다.
 >
-> | OS | 설정 파일 경로 |
+> | OS | 전역 설정 경로 |
 > |---|---|
 > | macOS / Linux | `~/.vactl/config.json` |
 > | Windows | `%USERPROFILE%\.vactl\config.json` |
 >
-> 현재 경로는 `vactl config path`, 내용 확인은 `vactl config show` (마스터키는 가려져 표시).
+> 확인: `vactl config show` (env·URL·appId·키 마스킹) / `vactl config path`.
 
-### (선택) 환경변수로 설정
+### (선택) 환경변수 override
 
-설정 파일 대신 환경변수를 써도 됩니다(설정 파일보다 **우선** 적용). 셸마다 문법이 다릅니다:
+설정보다 **우선** 적용됩니다. `VACTL_ENV`(prod|local), `VACTL_MASTER_KEY`, 그리고 커스텀 서버용 `VACTL_SERVER`/`VACTL_APP_ID` 등.
 
-**macOS / Linux (bash·zsh)**
-```bash
-export VACTL_SERVER=https://<서버>
-export VACTL_APP_ID=<APP_ID>
-export VACTL_MASTER_KEY=<MASTER_KEY>
-```
-
-**Windows — PowerShell**
-```powershell
-$env:VACTL_SERVER   = "https://<서버>"
-$env:VACTL_APP_ID   = "<APP_ID>"
-$env:VACTL_MASTER_KEY = "<MASTER_KEY>"
-```
-
-**Windows — 명령 프롬프트(cmd)**
-```cmd
-set VACTL_SERVER=https://<서버>
-set VACTL_APP_ID=<APP_ID>
-set VACTL_MASTER_KEY=<MASTER_KEY>
-```
-
-> `VACTL_SERVER` 를 주면 `parseUrl=<서버>/parse`, `workerUrl=<서버>` 로 자동 설정됩니다.
-> Parse와 워커가 다른 주소면 `VACTL_PARSE_URL` / `VACTL_WORKER_URL` 를 개별 지정하세요.
+| OS / 셸 | 예 |
+|---|---|
+| macOS/Linux (bash·zsh) | `export VACTL_ENV=local` |
+| Windows PowerShell | `$env:VACTL_ENV = "local"` |
+| Windows CMD | `set VACTL_ENV=local` |
 
 ---
 

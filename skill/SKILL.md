@@ -16,8 +16,8 @@ vactl ping || npx -y github:paulracooni/vactl-cli-skills ping
 ```
 
 - 명령이 없으면: `npm install -g github:paulracooni/vactl-cli-skills` (또는 `npx github:paulracooni/vactl-cli-skills` 로 매번 실행).
-- "설정이 비어 있습니다" 가 나오면: `vactl login` (대화형) 또는
-  `vactl config set --server <url> --app-id <id> --master-key <key>`.
+- "설정 부족" 이 나오면: 환경별 마스터키만 넣으면 됨 — `vactl login`(prod 기본) 또는 `vactl login --env local`.
+  환경·키 확인은 `vactl env`. 프로젝트마다 환경 고정은 그 폴더에서 `vactl env use <prod|local> --project`.
 
 ## 호출 패턴
 
