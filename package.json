@@ -1,0 +1,29 @@
+{
+  "name": "vactl",
+  "version": "1.0.0",
+  "description": "ValueAdd (va) admin CLI — operate companies, matching rules, feedback, AI guide proposals, and matching from anywhere via the remote Parse/worker API.",
+  "type": "module",
+  "bin": {
+    "vactl": "bin/vactl.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skill",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node bin/vactl.js"
+  },
+  "keywords": [
+    "valueadd",
+    "vactl",
+    "cli",
+    "parse",
+    "b2g"
+  ],
+  "license": "UNLICENSED"
+}
