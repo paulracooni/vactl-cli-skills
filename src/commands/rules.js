@@ -39,7 +39,7 @@ export const rules = {
 
   set: {
     summary: '매칭 규칙(profile) 부분 set',
-    usage: 'rules set <ref> [--keywords-in|--keywords-out|--region-pref|--licenses|--certifications|--bid-divisions|--categories-must|--categories-want|--categories-avoid|--industry-codes|--presmpt-min N|--presmpt-max N]',
+    usage: 'rules set <ref> [--keywords-in|--keywords-out|--region-pref|--region-hard true|false|--licenses|--certifications|--bid-divisions|--categories-must|--categories-want|--categories-avoid|--industry-codes|--presmpt-min N|--presmpt-max N]',
     async run({ parse }, argv) {
       const { pos, opts } = parseArgs(argv);
       const co = await resolveCompany(parse, pos[0]);
@@ -54,8 +54,11 @@ export const rules = {
       ]) if (opts[flag] != null) p[key] = csv(opts[flag]);
       if (opts['presmpt-min'] != null) p.presmpt_min = Number(opts['presmpt-min']);
       if (opts['presmpt-max'] != null) p.presmpt_max = Number(opts['presmpt-max']);
+      // 지역 하드필터: 켜면 region_pref 외 특정 지역 전용 공고를 후보에서 제외('전국' 선호여도 적용)
+      if (opts['region-hard'] != null)
+        p.region_hard = ['1', 'true', 'on', 'yes', 'y'].includes(String(opts['region-hard']).toLowerCase());
       await parse.update('Company', co.objectId, { profile: p });
-      ok(`profile 갱신: ${co.objectId}`);
+      ok(`profile 갱신: ${co.objectId}` + (opts['region-hard'] != null ? ` (지역 하드필터 ${p.region_hard ? 'ON' : 'OFF'})` : ''));
     },
   },
 

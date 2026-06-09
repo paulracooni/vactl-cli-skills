@@ -37,7 +37,8 @@ vactl ping || npx -y github:paulracooni/vactl-cli-skills ping
 ### rules — 매칭 규칙
 - `rules show <ref>` — profile + 가이드
 - `rules guide <ref> "<텍스트>"` — 가이드 교체("" 로 제거)
-- `rules set <ref> --keywords-in|--keywords-out|--region-pref|--licenses|--certifications|--bid-divisions|--categories-must|--categories-want|--categories-avoid|--industry-codes|--presmpt-min|--presmpt-max` — 부분 set
+- `rules set <ref> --keywords-in|--keywords-out|--region-pref|--region-hard true/false|--licenses|--certifications|--bid-divisions|--categories-must|--categories-want|--categories-avoid|--industry-codes|--presmpt-min|--presmpt-max` — 부분 set
+  - `--region-hard true`: 지역 **하드필터** ON. region_pref의 지정 지역 + 전국 공고만 통과하고, 다른 특정 지역 전용 공고는 후보에서 제외. ("전국"이 선호에 있어도 적용 — 지역 불일치를 점수로 못 덮음)
 - `rules kw-add <ref> in|out <키워드들...>` — 추가(가중치 `단어×N`)
 - `rules kw-remove <ref> in|out <키워드들...>` — 제거
 
