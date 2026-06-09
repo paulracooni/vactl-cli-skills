@@ -5,7 +5,7 @@ export const scheduler = {
     summary: '백그라운드 잡 + 최근 실행',
     usage: 'scheduler jobs',
     async run({ worker }) {
-      const d = await worker.get('/admin/scheduler.json');
+      const d = await worker.get('/api/scheduler');
       table(['잡', 'cron', '상태', '다음 실행'], (d.jobs || []).map((j) => [
         j.id, j.cron, j.paused ? 'paused' : 'active', j.next_run || '-',
       ]));
@@ -23,7 +23,7 @@ export const scheduler = {
       const { pos } = parseArgs(argv);
       const jobId = pos[0];
       if (!jobId) { console.error('job_id 가 필요합니다.'); process.exit(1); }
-      const r = await worker.post(`/admin/scheduler/trigger?job_id=${encodeURIComponent(jobId)}`);
+      const r = await worker.post(`/api/scheduler/trigger?job_id=${encodeURIComponent(jobId)}`);
       ok(`트리거: ${jobId}`);
       console.log(JSON.stringify(r));
     },
@@ -35,7 +35,7 @@ export const stats = {
     summary: 'KPI 요약',
     usage: 'stats',
     async run({ worker }) {
-      const d = await worker.get('/admin/stats.json');
+      const d = await worker.get('/api/stats');
       console.log(c.bold('=== KPI ==='));
       for (const [k, v] of Object.entries(d.kpi || {})) {
         console.log(`  ${k.padEnd(24)} = ${typeof v === 'number' ? v.toLocaleString() : v}`);

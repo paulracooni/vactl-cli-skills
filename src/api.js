@@ -1,12 +1,21 @@
-// Parse REST + worker HTTP 클라이언트 (마스터키 인증).
+// Parse REST + worker HTTP 클라이언트.
+// 키가 마스터키(64자 hex)면 Parse 직접 호출, ai_ 토큰이면 워커 프록시(/api/db)로
+// Bearer 호출 — 마스터키 없이 스코프 제한 토큰만으로 동작한다.
+
+const isToken = (k) => typeof k === 'string' && k.startsWith('ai_');
+const workerBase = (cfg) =>
+  String(cfg.workerUrl || String(cfg.parseUrl).replace(/\/parse\/?$/, '')).replace(/\/+$/, '');
 
 export function makeParse(cfg) {
-  const base = String(cfg.parseUrl).replace(/\/+$/, '');
-  const headers = {
-    'X-Parse-Application-Id': cfg.appId,
-    'X-Parse-Master-Key': cfg.masterKey,
-    'Content-Type': 'application/json',
-  };
+  const token = isToken(cfg.masterKey);
+  const base = token ? workerBase(cfg) + '/api/db' : String(cfg.parseUrl).replace(/\/+$/, '');
+  const headers = token
+    ? { Authorization: 'Bearer ' + cfg.masterKey, 'Content-Type': 'application/json' }
+    : {
+        'X-Parse-Application-Id': cfg.appId,
+        'X-Parse-Master-Key': cfg.masterKey,
+        'Content-Type': 'application/json',
+      };
 
   async function req(method, path, { query, body } = {}) {
     let url = base + path;
@@ -53,11 +62,10 @@ export function makeParse(cfg) {
 }
 
 export function makeWorker(cfg) {
-  const base = String(cfg.workerUrl || cfg.parseUrl.replace(/\/parse\/?$/, '')).replace(/\/+$/, '');
-  const headers = {
-    'X-Parse-Master-Key': cfg.masterKey,
-    'Content-Type': 'application/json',
-  };
+  const base = workerBase(cfg);
+  const headers = isToken(cfg.masterKey)
+    ? { Authorization: 'Bearer ' + cfg.masterKey, 'Content-Type': 'application/json' }
+    : { 'X-Parse-Master-Key': cfg.masterKey, 'Content-Type': 'application/json' };
   async function req(method, path, body) {
     let res;
     try {
