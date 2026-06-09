@@ -6,6 +6,7 @@ import {
 } from './config.js';
 import { makeParse, makeWorker } from './api.js';
 import { c, ok, warn, parseArgs } from './util.js';
+import { checkUpdate, updateBanner, localVersion } from './update.js';
 import { company } from './commands/company.js';
 import { rules } from './commands/rules.js';
 import { feedback } from './commands/feedback.js';
@@ -145,20 +146,7 @@ async function pingCmd(envOverride) {
   try { await makeParse(cfg).find('Company', { limit: 1 }); ok('Parse OK (접근 가능)'); } catch (e) { warn('Parse 실패: ' + e.message); }
 }
 
-export async function main(argv) {
-  // 전역 --env 추출
-  let envOverride;
-  const a = [];
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--env') { envOverride = argv[i + 1]; i += 1; }
-    else if (argv[i].startsWith('--env=')) { envOverride = argv[i].slice(6); }
-    else a.push(argv[i]);
-  }
-  argv = a;
-
-  const [first, ...rest] = argv;
-  if (!first || first === 'help' || first === '--help' || first === '-h') return printHelp();
-  if (first === 'version' || first === '--version' || first === '-v') { console.log('vactl 1.1.0'); return; }
+async function dispatch(first, rest, envOverride) {
   if (first === 'env') return envCmd(rest, envOverride);
   if (first === 'config') return configCmd(rest, envOverride);
   if (first === 'login') return loginCmd(envOverride);
@@ -172,4 +160,37 @@ export async function main(argv) {
   const cmd = group[sub];
   if (!cmd) { console.error(c.red(`알 수 없는 '${first}' 하위명령: ${sub}`)); printGroupHelp(first, group); process.exit(1); }
   return cmd.run(makeCtx(envOverride), rest.slice(1));
+}
+
+export async function main(argv) {
+  // 업데이트 체크를 백그라운드로 시작 (대부분 캐시 히트라 즉시 끝남)
+  const updP = checkUpdate().catch(() => null);
+
+  // 전역 --env 추출
+  let envOverride;
+  const a = [];
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--env') { envOverride = argv[i + 1]; i += 1; }
+    else if (argv[i].startsWith('--env=')) { envOverride = argv[i].slice(6); }
+    else a.push(argv[i]);
+  }
+  argv = a;
+
+  const [first, ...rest] = argv;
+  // 명령 종료 후 업데이트 배너 (캐시면 즉시, stale이면 최대 ~1s만 더 기다림)
+  const showBanner = async () => {
+    try {
+      const info = await Promise.race([updP, new Promise((r) => setTimeout(() => r(null), 1000))]);
+      updateBanner(info);
+    } catch { /* noop */ }
+  };
+
+  if (!first || first === 'help' || first === '--help' || first === '-h') { printHelp(); return showBanner(); }
+  if (first === 'version' || first === '--version' || first === '-v') { console.log('vactl ' + localVersion()); return showBanner(); }
+
+  try {
+    await dispatch(first, rest, envOverride);
+  } finally {
+    await showBanner();
+  }
 }

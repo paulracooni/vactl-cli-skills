@@ -23,6 +23,8 @@ vactl config set --env local --master-key <MASTER_KEY>
 대화형: `vactl login`(prod) / `vactl login --env local`.
 프로젝트마다 환경 고정: 그 폴더에서 `vactl env use <prod|local> --project`.
 
+> **마스터키 대신 권한 제한 토큰(`ai_…`)도 사용 가능.** 어드민 웹 → *CLI·스킬 사용법 → 설정·토큰 탭*에서 발급한 토큰을 마스터키 자리에 넣으면, vactl이 자동 인식해 **워커 프록시**로 동작합니다. 마스터키 노출 없이 read/write 스코프가 강제되고 **삭제·민감경로는 차단**됩니다.
+
 ## 3. 연결 확인
 ```bash
 vactl ping
@@ -47,6 +49,24 @@ curl.exe -fsSL "https://raw.githubusercontent.com/paulracooni/vactl-cli-skills/m
 ```bash
 vactl company list
 ```
+
+## 6. 업데이트
+CLI/스킬이 갱신되면 vactl 실행 시 **"새 버전이 있습니다"** 배너가 자동으로 뜹니다(하루 1회 GitHub 버전 확인, `VACTL_NO_UPDATE_CHECK=1` 로 끌 수 있음). 보이면 아래로 갱신하세요.
+
+**CLI 업데이트**
+```bash
+npm install -g github:paulracooni/vactl-cli-skills
+vactl version   # 버전 확인
+```
+
+**Claude 스킬도 함께 갱신** — 위 **4번**을 다시 실행하면 같은 경로에 최신 SKILL.md로 덮어씁니다.
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/paulracooni/vactl-cli-skills/main/skill/SKILL.md -o ~/.claude/skills/vactl/SKILL.md
+# Windows (PowerShell)
+curl.exe -fsSL "https://raw.githubusercontent.com/paulracooni/vactl-cli-skills/main/skill/SKILL.md" -o "$env:USERPROFILE\.claude\skills\vactl\SKILL.md"
+```
+> 설정(`~/.vactl/config.json`)과 발급한 토큰은 업데이트해도 유지되므로 다시 설정할 필요 없습니다.
 
 ## 명령 요약
 - `vactl --help` 로 전체 확인. 그룹: company / rules / feedback / ai / matches / ann / intake / scheduler / stats.
